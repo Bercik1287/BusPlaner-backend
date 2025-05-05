@@ -1,8 +1,9 @@
 from fpdf import FPDF
 from datetime import datetime
+from fastapi import Depends
 from sqlalchemy.orm import Session
-from app.core.database import AppSession, engine
-from app.models import (
+from app.core.database import get_db
+from app.db.models.system import (
     Linie, Przystanki, Warianty, Trasy,
     Przystanki_Warianty, Warianty_Trasy, Linie_Trasy,
     Brygady, Brygady_Linie, Kierowcy, Kierowcy_Brygady,
@@ -30,7 +31,7 @@ class PDFSchedule(FPDF):
         self.multi_cell(0, 6, body)
         self.ln()
 
-def generate_schedule_pdf(db: Session, line_number=None, output_file='rozklad_jazdy.pdf'):
+def generate_schedule_pdf(db: Session = Depends(get_db), line_number=None, output_file='rozklad_jazdy.pdf'):
     pdf = PDFSchedule()
     pdf.add_page()
     pdf.set_auto_page_break(auto=True, margin=15)
@@ -118,11 +119,3 @@ def generate_schedule_pdf(db: Session, line_number=None, output_file='rozklad_ja
     
     pdf.output(output_file)
     print(f"Wygenerowano rozkład jazdy: {output_file}")
-
-if __name__ == "__main__":
-    db = AppSession()
-    
-    try:
-        generate_schedule_pdf(db)
-    finally:
-        db.close()
